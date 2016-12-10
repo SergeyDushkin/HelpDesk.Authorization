@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Security.Cryptography.X509Certificates;
+using System.IO;
 
 namespace authorization
 {
@@ -31,11 +33,11 @@ namespace authorization
         {
             services.AddDbContext<UserDbContext>(options => options.UseSqlServer(_configuration.GetConnectionString("AuthorizationDatabase")));
 
-            //var cert = new X509Certificate2(Path.Combine(_environment.ContentRootPath, "IdentityHelpDesk.pfx"), "12345678");
+            var cert = new X509Certificate2(Path.Combine(_environment.ContentRootPath, "IdentityHelpDesk.pfx"), "12345678");
             //var key = System.Text.Encoding.UTF8.GetBytes("c8Ez0kTUjBirHdFF3kY3YNqm2CXu2tODZaO4gsNRjlHhu55FL7axYchfFxqz0Iv"); 
 
             services.AddIdentityServer()
-                .AddTemporarySigningCredential()
+                .AddSigningCredential(cert)
                 .AddInMemoryClients(Clients.Get())
                 .AddInMemoryApiResources(ApiResources.Get());
 
