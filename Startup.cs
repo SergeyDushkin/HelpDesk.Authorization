@@ -7,8 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
 
 namespace authorization
 {
@@ -33,15 +31,13 @@ namespace authorization
         {
             services.AddDbContext<UserDbContext>(options => options.UseSqlServer(_configuration.GetConnectionString("AuthorizationDatabase")));
 
-            var cert = new X509Certificate2(Path.Combine(_environment.ContentRootPath, "IdentityHelpDesk.pfx"), "12345678");
+            //var cert = new X509Certificate2(Path.Combine(_environment.ContentRootPath, "IdentityHelpDesk.pfx"), "12345678");
+            //var key = System.Text.Encoding.UTF8.GetBytes("c8Ez0kTUjBirHdFF3kY3YNqm2CXu2tODZaO4gsNRjlHhu55FL7axYchfFxqz0Iv"); 
 
-            services.AddDeveloperIdentityServer()
-                .SetSigningCredential(cert)
-                .AddInMemoryStores()
-                .AddInMemoryScopes(Scopes.Get())
-                .AddInMemoryClients(Clients.Get());
-
-            //.AddInMemoryUsers(Users.Get())
+            services.AddIdentityServer()
+                .AddTemporarySigningCredential()
+                .AddInMemoryClients(Clients.Get())
+                .AddInMemoryApiResources(ApiResources.Get());
 
             services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidator>();
             services.AddTransient<IProfileService, ProfileService>();

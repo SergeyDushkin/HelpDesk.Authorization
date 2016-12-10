@@ -1,5 +1,7 @@
-﻿using IdentityServer4.Models;
+﻿/*
+using IdentityServer4.Models;
 using System.Collections.Generic;
+using static IdentityServer4.IdentityServerConstants;
 
 namespace authorization
 {
@@ -32,3 +34,4 @@ namespace authorization
         }
     }
 }
+*/

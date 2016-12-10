@@ -23,7 +23,7 @@ namespace authorization
 
             if (user == null)
             {
-                context.Result = new GrantValidationResult(new TokenErrors(), "Username Or Password Incorrect"); ;
+                context.Result = new GrantValidationResult(TokenRequestErrors.InvalidRequest, "Username Or Password Incorrect"); ;
                 return Task.FromResult(0);
             }
 
