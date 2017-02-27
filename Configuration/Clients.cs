@@ -16,15 +16,12 @@ namespace authorization
             {
                 ClientId = "public",
                 ClientName = "Public Resource Owner Client",
+                RequireClientSecret = false,
+                AllowOfflineAccess = true,
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
-
-                ClientSecrets = new List<Secret>
-                {
-                    new Secret("public".Sha256())
-                },
                 AllowedScopes = new List<string>
                 {
-                    "helpdesk"
+                    "offline_access", "helpdesk"
                 }
             });
 
