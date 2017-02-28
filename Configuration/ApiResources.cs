@@ -12,7 +12,7 @@ namespace authorization
                 new ApiResource("helpdesk", "helpdesk api") {
                     
                     Description = "helpdesk api features and data",
-                    UserClaims = new [] { "name", "given_name", "family_name", "email", "role", "website" }
+                    UserClaims = new [] { "name", "given_name", "family_name", "email", "role", "feature", "website" }
                 }
             };
         }

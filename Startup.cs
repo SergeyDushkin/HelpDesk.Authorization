@@ -9,13 +9,15 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
+using Serilog;
+using authorization.Dal;
 
 namespace authorization
 {
     public class Startup
     {
-        private readonly IHostingEnvironment _environment;
-        private readonly IConfigurationRoot _configuration;
+        private readonly IHostingEnvironment Environment;
+        private readonly IConfigurationRoot Configuration;
 
         public Startup(IHostingEnvironment env)
         {
@@ -25,15 +27,15 @@ namespace authorization
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
 
-            _configuration = builder.Build();
-            _environment = env;
+            Configuration = builder.Build();
+            Environment = env;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<UserDbContext>(options => options.UseSqlServer(_configuration.GetConnectionString("AuthorizationDatabase")));
+            services.AddDbContext<UserDbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("AuthorizationDatabase")));
 
-            var cert = new X509Certificate2(Path.Combine(_environment.ContentRootPath, "IdentityHelpDesk.pfx"), "12345678");
+            var cert = new X509Certificate2(Path.Combine(Environment.ContentRootPath, "IdentityHelpDesk.pfx"), "12345678");
             //var key = System.Text.Encoding.UTF8.GetBytes("c8Ez0kTUjBirHdFF3kY3YNqm2CXu2tODZaO4gsNRjlHhu55FL7axYchfFxqz0Iv"); 
 
             services.AddIdentityServer()
@@ -44,18 +46,25 @@ namespace authorization
             services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidator>();
             services.AddTransient<IProfileService, ProfileService>();
             services.AddTransient<IProfileManager, ProfileManager>();
+
+            services.AddScoped<IDatabaseSeeder, DatabaseInitializer>();
         }
 
-        public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            Func<string, LogLevel, bool> filter = (scope, level) =>
-                scope.StartsWith("IdentityServer") ||
-                scope.StartsWith("IdentityModel") ||
-                level == LogLevel.Error ||
-                level == LogLevel.Critical;
+            //Func<string, LogLevel, bool> filter = (scope, level) =>
+            //    scope.StartsWith("IdentityServer") ||
+            //    scope.StartsWith("IdentityModel") ||
+            //    level == LogLevel.Error ||
+            //    level == LogLevel.Critical;
 
-            loggerFactory.AddConsole(filter);
-            loggerFactory.AddDebug(filter);
+             var serilogLogger = new LoggerConfiguration()
+                .Enrich.WithProperty("Application", "ServiceDesk.Services.Application")
+                .ReadFrom.Configuration(Configuration)
+                .CreateLogger();
+
+            loggerFactory.AddSerilog(serilogLogger);
+            loggerFactory.AddConsole();   //filter
 
             app.UseDeveloperExceptionPage();
 
@@ -64,6 +73,12 @@ namespace authorization
                 .AllowAnyMethod()
                 .AllowAnyOrigin()
                 .AllowCredentials());
+                
+            app.ApplicationServices.GetService<UserDbContext>().Database.EnsureDeleted();
+            if (app.ApplicationServices.GetService<UserDbContext>().Database.EnsureCreated())
+            {
+                app.ApplicationServices.GetService<IDatabaseSeeder>().SeedAsync();
+            }
 
             app.UseIdentityServer();
         }

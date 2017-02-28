@@ -1,6 +1,5 @@
 ﻿using IdentityModel;
 using IdentityServer4.Models;
-using IdentityServer4.Services;
 using IdentityServer4.Validation;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,31 +32,15 @@ namespace authorization
                 new Claim(JwtClaimTypes.FamilyName, ""),
                 new Claim(JwtClaimTypes.Email, ""),
                 new Claim(JwtClaimTypes.PhoneNumber, ""),
-                new Claim(JwtClaimTypes.Id, user.Id)
+                new Claim(JwtClaimTypes.Id, user.Id.ToString()),
             };
 
-            var roles = user.Roles.Select(r => new Claim(JwtClaimTypes.Role, r));
+            var roles = user.GetClaims().Select(r => new Claim(r.Type, r.Value));
+            
             claims.AddRange(roles);
 
-            context.Result = new GrantValidationResult(subject: user.Id, authenticationMethod: "Bearer", claims: claims); ;
+            context.Result = new GrantValidationResult(subject: user.Id.ToString(), authenticationMethod: "Bearer", claims: claims); ;
 
-            return Task.FromResult(0);
-        }
-    }
-
-    public class ProfileService : IProfileService
-    {
-        public Task GetProfileDataAsync(ProfileDataRequestContext context)
-        {
-            context.IssuedClaims = context.Subject.Claims
-                .Where(x => context.RequestedClaimTypes.Contains(x.Type))
-                .ToList();
-
-            return Task.FromResult(0);
-        }
-
-        public Task IsActiveAsync(IsActiveContext context)
-        {
             return Task.FromResult(0);
         }
     }
