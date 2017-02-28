@@ -59,7 +59,7 @@ namespace authorization
             //    level == LogLevel.Critical;
 
              var serilogLogger = new LoggerConfiguration()
-                .Enrich.WithProperty("Application", "ServiceDesk.Services.Application")
+                .Enrich.WithProperty("Application", "ServiceDesk.Services.Authorization")
                 .ReadFrom.Configuration(Configuration)
                 .CreateLogger();
 
